@@ -1,0 +1,20 @@
+{
+  "project_name": "Airline Recommendation Prediction",
+  "algorithm": "RandomForestClassifier",
+  "accuracy": 0.9333,
+  "n_features": 6,
+  "features_used": [
+    "Seat Comfort",
+    "Staff Service",
+    "Food & Beverages",
+    "Inflight Entertainment",
+    "Value For Money",
+    "Overall Rating"
+  ],
+  "target_names": [
+    "Not Recommended (0)",
+    "Recommended (1)"
+  ],
+  "n_estimators": 100,
+  "random_state": 42
+}
