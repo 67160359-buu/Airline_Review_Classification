@@ -16,7 +16,7 @@ st.set_page_config(
 def load_airline_model():
     # โหลดโมเดล Random Forest ที่บันทึกไว้จากไฟล์ .ipynb (ต้องรัน joblib.dump ก่อน)
     try:
-        model = joblib.load("model_artifacts/airline_rf_model.pkl")
+        model = joblib.load("airline_rf_model.pkl")
         return model
     except:
         st.error("❌ ไม่พบไฟล์โมเดล 'airline_rf_model.pkl' กรุณาตรวจสอบว่าได้บันทึกโมเดลแล้ว")
@@ -41,9 +41,19 @@ st.markdown("""
 st.divider()
 
 # ===== 5. ส่วนรับ Input (Features) =====
-st.subheader("📊 กรอกคะแนนความพึงพอใจ (1-5 หรือ 1-10)")
+st.subheader("📋 ระบุข้อมูลสายการบินและคะแนนความพึงพอใจ")
 
-# แบ่งหน้าจอเป็น 2 คอลัมน์เหมือนในตัวอย่างเบาหวาน
+# เพิ่มตัวเลือกชื่อสายการบิน (จำลองรายชื่อ Top 10 ปี 2023 ตามที่ระบุใน Sidebar)
+airline_name = st.selectbox(
+    "เลือกสายการบิน (Airline)",
+    ["Singapore Airlines", "Qatar Airways", "ANA All Nippon Airways", "Emirates", 
+     "Japan Airlines", "Turkish Airlines", "Air France", "Cathay Pacific", 
+     "EVA Air", "Korean Air", "อื่นๆ (Other)"]
+)
+
+st.markdown("<br>", unsafe_allow_html=True) # เพิ่มช่องว่างเล็กน้อย
+
+# แบ่งหน้าจอเป็น 2 คอลัมน์สำหรับกรอกคะแนน
 col1, col2 = st.columns(2)
 
 with col1:
@@ -87,7 +97,7 @@ with btn_col:
     predict_button = st.button("🔍 วิเคราะห์แนวโน้มลูกค้า", use_container_width=True, type="primary")
 
 if predict_button and model is not None:
-    # จัดเตรียมข้อมูล Input (ลำดับต้องตรงกับตอน Train ในไฟล์ 67160359)
+    # จัดเตรียมข้อมูล Input (ลำดับต้องตรงกับตอน Train)
     # features = ['Seat Comfort', 'Staff Service', 'Food & Beverages', 'Inflight Entertainment', 'Value For Money', 'Overall Rating']
     input_data = np.array([[
         seat_comfort, staff_service, food_beverages, 
@@ -100,18 +110,19 @@ if predict_button and model is not None:
 
     st.subheader("📈 ผลการวิเคราะห์")
 
-    # แสดงผลตามค่าที่โมเดลทำนายได้
+    # แสดงผลตามค่าที่โมเดลทำนายได้ พร้อมระบุชื่อสายการบิน
     if prediction == 1:
-        st.success(f"### ✅ ลูกค้าจะ 'แนะนำ' (Recommended)\n**ความมั่นใจของโมเดล: {probabilities[1]*100:.1f}%**")
+        st.success(f"### ✅ ลูกค้าจะ 'แนะนำ' สายการบิน {airline_name}\n**ความมั่นใจของโมเดล: {probabilities[1]*100:.1f}%**")
     else:
-        st.error(f"### ❌ ลูกค้าจะ 'ไม่แนะนำ' (Not Recommended)\n**ความมั่นใจของโมเดล: {probabilities[0]*100:.1f}%**")
+        st.error(f"### ❌ ลูกค้าจะ 'ไม่แนะนำ' สายการบิน {airline_name}\n**ความมั่นใจของโมเดล: {probabilities[0]*100:.1f}%**")
 
-    # แสดงระดับความมั่นใจ (Confidence Gauge) โดยใช้สีเขียว Emerald ตามธีมไฟล์ล่าสุด
+    # แสดงระดับความมั่นใจ (Confidence Gauge)
     st.write("**ระดับความมั่นใจในการแนะนำ:**")
     st.progress(float(probabilities[1]), text=f"โอกาสที่ลูกค้าจะแนะนำ: {probabilities[1]*100:.1f}%")
 
     # ตารางสรุปข้อมูล (Expander)
     with st.expander("📋 ดูรายละเอียดข้อมูลที่นำเข้า"):
+        st.write(f"**สายการบินที่ประเมิน:** {airline_name}")
         summary_df = pd.DataFrame({
             "หัวข้อประเมิน": ["Seat Comfort", "Staff Service", "Food & Beverages", "Inflight Entertainment", "Value For Money", "Overall Rating"],
             "คะแนนที่ได้รับ": [seat_comfort, staff_service, food_beverages, inflight_entertainment, value_for_money, overall_rating]
