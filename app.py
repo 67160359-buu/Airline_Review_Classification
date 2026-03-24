@@ -16,7 +16,7 @@ st.set_page_config(
 def load_airline_model():
     # โหลดโมเดล Random Forest ที่บันทึกไว้จากไฟล์ .ipynb (ต้องรัน joblib.dump ก่อน)
     try:
-        model = joblib.load("airline_rf_model.pkl")
+        model = joblib.load("model_artifacts/airline_rf_model.pkl")
         return model
     except:
         st.error("❌ ไม่พบไฟล์โมเดล 'airline_rf_model.pkl' กรุณาตรวจสอบว่าได้บันทึกโมเดลแล้ว")
