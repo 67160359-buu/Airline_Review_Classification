@@ -14,12 +14,12 @@ st.set_page_config(
 # ===== 2. โหลดโมเดล (Load Model) =====
 @st.cache_resource
 def load_airline_model():
-    # โหลดโมเดล Random Forest ที่บันทึกไว้จากไฟล์ .ipynb (ต้องรัน joblib.dump ก่อน)
+    # 🌟 แก้ไขตรงนี้: ชี้เป้าไปที่โฟลเดอร์ model_artifacts ตามโครงสร้างไฟล์ของคุณ 🌟
     try:
-        model = joblib.load("airline_rf_model.pkl")
+        model = joblib.load("model_artifacts/airline_rf_model.pkl")
         return model
     except:
-        st.error("❌ ไม่พบไฟล์โมเดล 'airline_rf_model.pkl' กรุณาตรวจสอบว่าได้บันทึกโมเดลแล้ว")
+        st.error("❌ ไม่พบไฟล์โมเดลในโฟลเดอร์ 'model_artifacts' กรุณาตรวจสอบอีกครั้ง")
         return None
 
 model = load_airline_model()
@@ -41,16 +41,25 @@ st.markdown("""
 st.divider()
 
 # ===== 5. ส่วนรับ Input (Features) =====
-st.subheader("📊 กรอกคะแนนความพึงพอใจ (1-5 หรือ 1-10)")
+st.subheader("📊 กรอกข้อมูลและคะแนนความพึงพอใจ")
 
-# แบ่งหน้าจอเป็น 2 คอลัมน์เหมือนในตัวอย่างเบาหวาน
+# 🌟 เพิ่มช่องเลือกสายการบิน (เพื่อนำไปแสดงผลให้สวยงาม) 🌟
+airline_name = st.selectbox(
+    "เลือกสายการบินที่ต้องการวิเคราะห์ (Airline):",
+    ["Qatar Airways", "Singapore Airlines", "Emirates", "ANA All Nippon Airways", 
+     "Cathay Pacific", "Japan Airlines", "Turkish Airlines", "EVA Air", "Air France", "Thai Airways", "อื่นๆ"]
+)
+
+st.write("") # เว้นบรรทัดนิดหน่อย
+
+# แบ่งหน้าจอเป็น 2 คอลัมน์สำหรับ Slider
 col1, col2 = st.columns(2)
 
 with col1:
     overall_rating = st.slider(
         "คะแนนภาพรวม (Overall Rating)",
         min_value=1, max_value=10, value=7, step=1,
-        help="คะแนนความพึงพอใจรวมทุกด้าน"
+        help="คะแนนความพึงพอใจรวมทุกด้าน (เต็ม 10)"
     )
     
     seat_comfort = st.slider(
@@ -87,8 +96,7 @@ with btn_col:
     predict_button = st.button("🔍 วิเคราะห์แนวโน้มลูกค้า", use_container_width=True, type="primary")
 
 if predict_button and model is not None:
-    # จัดเตรียมข้อมูล Input (ลำดับต้องตรงกับตอน Train ในไฟล์ 67160359)
-    # features = ['Seat Comfort', 'Staff Service', 'Food & Beverages', 'Inflight Entertainment', 'Value For Money', 'Overall Rating']
+    # จัดเตรียมข้อมูล Input (ลำดับต้องตรงกับตอน Train โมเดล)
     input_data = np.array([[
         seat_comfort, staff_service, food_beverages, 
         inflight_entertainment, value_for_money, overall_rating
@@ -98,7 +106,7 @@ if predict_button and model is not None:
         prediction = model.predict(input_data)[0]
         probabilities = model.predict_proba(input_data)[0]
 
-    st.subheader("📈 ผลการวิเคราะห์")
+    st.subheader(f"📈 ผลการวิเคราะห์สำหรับ {airline_name}")
 
     # แสดงผลตามค่าที่โมเดลทำนายได้
     if prediction == 1:
@@ -106,14 +114,14 @@ if predict_button and model is not None:
     else:
         st.error(f"### ❌ ลูกค้าจะ 'ไม่แนะนำ' (Not Recommended)\n**ความมั่นใจของโมเดล: {probabilities[0]*100:.1f}%**")
 
-    # แสดงระดับความมั่นใจ (Confidence Gauge) โดยใช้สีเขียว Emerald ตามธีมไฟล์ล่าสุด
+    # แสดงระดับความมั่นใจ (Confidence Gauge)
     st.write("**ระดับความมั่นใจในการแนะนำ:**")
     st.progress(float(probabilities[1]), text=f"โอกาสที่ลูกค้าจะแนะนำ: {probabilities[1]*100:.1f}%")
 
     # ตารางสรุปข้อมูล (Expander)
     with st.expander("📋 ดูรายละเอียดข้อมูลที่นำเข้า"):
         summary_df = pd.DataFrame({
-            "หัวข้อประเมิน": ["Seat Comfort", "Staff Service", "Food & Beverages", "Inflight Entertainment", "Value For Money", "Overall Rating"],
-            "คะแนนที่ได้รับ": [seat_comfort, staff_service, food_beverages, inflight_entertainment, value_for_money, overall_rating]
+            "หัวข้อประเมิน": ["สายการบิน (Airline)", "Seat Comfort", "Staff Service", "Food & Beverages", "Inflight Entertainment", "Value For Money", "Overall Rating"],
+            "ข้อมูลที่กรอก": [airline_name, seat_comfort, staff_service, food_beverages, inflight_entertainment, value_for_money, overall_rating]
         })
         st.table(summary_df)
